@@ -39,8 +39,9 @@ foreach($images as $img) {
     $filePath = $clean.'/'.$cnt.".".basename($original);
     echo "($cnt/$total) : $original : ";
     if(file_exists($filePath)) {
-        $needDown = checkFile($original, $filePath);
-        if(!$needDown) {
+	$file_size = filesize($filePath);
+	$img_size = $img->image->size;
+        if($file_size == $img_size) {
             echo "skipping\n";
             continue;
         }
@@ -50,32 +51,6 @@ foreach($images as $img) {
 }
 echo "Finished downloading album to : $clean\n";
 echo "All Done\n";
-
-
-function checkFile($url, $filePath) 
-{
-    $ret = true;
-    $ch = curl_init(); 
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-    curl_setopt($ch, CURLOPT_HEADER, TRUE);
-    curl_setopt($ch, CURLOPT_NOBODY, TRUE);
-    curl_setopt($ch, CURLOPT_URL, $url); 
-
-    $data = curl_exec($ch);
-    if(curl_error($ch)) {
-        print_r(curl_error($ch));
-        exit(3);
-    }
-    $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-    $file_size = filesize($filePath);
-    if($size == $file_size) {
-        $ret = false;
-    }
-    curl_exec($ch); 
-    curl_close($ch);
-    
-    return $ret;
-}
 
 
 function getURL($url, $filePath)
