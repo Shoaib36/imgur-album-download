@@ -1,18 +1,18 @@
 <?php
 if($argc < 2) {
-	print "Need one argument : album to download\n";
-	print "Example : Veelu\n";
-	exit 1;
+    print "Need one argument : album to download\n";
+    print "Example : Veelu\n";
+    exit (1);
 }
 $albumName = $argv[1];
 
-$contents = file_get_contents("http://api.imgur.com/2/album/$album.json");
+$contents = file_get_contents("http://api.imgur.com/2/album/$albumName.json");
 // $contents = file_get_contents("$albumName.json");
 $resp = json_decode($contents);
-if(isset($resp->error) {
-	$errorMsg = $resp->error->message;
-	print "The following error occurred : ".$errorMsg."\n";
-	exit 2;
+if(isset($resp->error)) {
+    $errorMsg = $resp->error->message;
+    print "The following error occurred : ".$errorMsg."\n";
+    exit (2);
 }
 
 $album = $resp->album;
@@ -24,24 +24,72 @@ echo "Title : $title\nDesc : $description\nCount : ".$total."\n";
 
 $clean = $albumName;
 if($title != '') {
-	$clean = preg_replace("/[^a-z0-9\-.]/i", '', $title);
+    $clean = preg_replace("/[^a-z0-9\-.]/i", '', $title);
 }
-mkdir($clean);
+$clean = "album/".$clean;
+if(!is_dir($clean)) {
+    mkdir($clean);
+}
+
+$lastGood = '';
+$cnt = 0;
 foreach($images as $img) {
-	$original = $img->links->original;
-	$filePath = basename($original);
-	echo "fetching ($cnt/$total) : $original\n";
-	getURL($original, $clean."/".$filePath);
+    $cnt++;
+    $original = $img->links->original;
+    $filePath = $clean.'/'.$cnt.".".basename($original);
+    echo "($cnt/$total) : $original : ";
+    if(file_exists($filePath)) {
+        $needDown = checkFile($original, $filePath);
+        if(!$needDown) {
+            echo "skipping\n";
+            continue;
+        }
+    }
+    echo "fetching\n";
+    getURL($original, $filePath);
 }
+echo "Finished downloading album to : $clean\n";
+echo "All Done\n";
+
+
+function checkFile($url, $filePath) 
+{
+    $ret = true;
+    $ch = curl_init(); 
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_HEADER, TRUE);
+    curl_setopt($ch, CURLOPT_NOBODY, TRUE);
+    curl_setopt($ch, CURLOPT_URL, $url); 
+
+    $data = curl_exec($ch);
+    if(curl_error($ch)) {
+        print_r(curl_error($ch));
+        exit(3);
+    }
+    $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+    $file_size = filesize($filePath);
+    if($size == $file_size) {
+        $ret = false;
+    }
+    curl_exec($ch); 
+    curl_close($ch);
+    
+    return $ret;
+}
+
 
 function getURL($url, $filePath)
 {
-	$ch = curl_init(); 
-	$fh = fopen($filePath, 'w'); 
-	curl_setopt($ch, CURLOPT_FILE, $fh); 
-	curl_setopt($ch, CURLOPT_URL, $url); 
-	curl_exec($ch); 
-	fflush($fh); 
-	fclose($fh);
-	curl_close($ch);
+    $ch = curl_init(); 
+    $fh = fopen($filePath, 'w'); 
+    curl_setopt($ch, CURLOPT_FILE, $fh); 
+    curl_setopt($ch, CURLOPT_URL, $url); 
+    curl_exec($ch); 
+    if(curl_error($ch)) {
+        print_r(curl_error($ch));
+        exit(3);
+    }
+    fflush($fh); 
+    fclose($fh);
+    curl_close($ch);
 }
