@@ -26,6 +26,10 @@ $clean = $albumName;
 if($title != '') {
     $clean = preg_replace("/[^a-z0-9\-.]/i", '', $title);
 }
+if(!is_dir('album')) {
+    mkdir('album');
+}
+
 $clean = "album/".$clean;
 if(!is_dir($clean)) {
     mkdir($clean);
