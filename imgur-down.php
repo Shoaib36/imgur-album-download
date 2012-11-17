@@ -6,7 +6,7 @@ if($argc < 2) {
 }
 $albumName = $argv[1];
 
-$contents = file_get_contents("http://api.imgur.com/2/album/$albumName.json");
+$contents =  fetchAlbumDetails("http://api.imgur.com/2/album/$albumName.json");
 // $contents = file_get_contents("$albumName.json");
 $resp = json_decode($contents);
 if(isset($resp->error)) {
@@ -71,4 +71,19 @@ function getURL($url, $filePath)
     fflush($fh); 
     fclose($fh);
     curl_close($ch);
+}
+
+
+function fetchAlbumDetails($url)
+{
+    $ch = curl_init(); 
+    curl_setopt($ch, CURLOPT_URL, $url); 
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $ret = curl_exec($ch); 
+    if(curl_error($ch)) {
+        print_r(curl_error($ch));
+        exit(3);
+    }
+    curl_close($ch);
+    return $ret;
 }
