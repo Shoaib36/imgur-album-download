@@ -3,6 +3,7 @@
 if($argc < 2) {
     print "Need one argument : album to download\n";
     print "Example : Veelu\n";
+    print "second arg can be used to specify save path."
     exit (1);
 }
 $albumName = $argv[1];
