@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 if($argc < 2) {
     print "Need one argument : album to download\n";
@@ -5,6 +6,11 @@ if($argc < 2) {
     exit (1);
 }
 $albumName = $argv[1];
+if($argc > 2) {
+    $savePath = $argv[2];
+} else {
+    $savePath = "album";
+}
 
 $contents =  fetchAlbumDetails("http://api.imgur.com/2/album/$albumName.json");
 // $contents = file_get_contents("$albumName.json");
@@ -26,11 +32,11 @@ $clean = $albumName;
 if($title != '') {
     $clean = preg_replace("/[^a-z0-9\-.]/i", '', $title);
 }
-if(!is_dir('album')) {
-    mkdir('album');
+if(!is_dir($savePath)) {
+    mkdir($savePath);
 }
 
-$clean = "album/".$clean;
+$clean = $savePath."/".$clean;
 if(!is_dir($clean)) {
     mkdir($clean);
 }
